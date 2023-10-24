@@ -2,7 +2,8 @@ package main
 
 import (
 	_ "github.com/go-sql-driver/mysql"
-	"hackathon/controller"
+	"hackathon/controller/post_controller"
+	"hackathon/controller/user_controller"
 	"hackathon/dao"
 	"log"
 	"net/http"
@@ -14,8 +15,29 @@ import (
 func main() {
 	dao.Init()
 
-	http.HandleFunc("/users", controller.GetHandler)
-	http.HandleFunc("/user", controller.PostHandler)
+	http.HandleFunc("/users", user_controller.GetUserListHandler)
+	http.HandleFunc("/signup", user_controller.PostNewUserHandler)
+	http.HandleFunc("/user/update", user_controller.PostUpdateUserHandler)
+	http.HandleFunc("/user/delete", user_controller.PostDeleteUserHandler)
+	http.HandleFunc("/user", user_controller.GetUserDetailHandler)
+
+	http.HandleFunc("/posts/categories", post_controller.GetPostsByCategoryHandler)
+	http.HandleFunc("/posts/curriculums", post_controller.GetPostsByCurriculumHandler)
+	http.HandleFunc("/posts/user", post_controller.GetPostsByUserHandler)
+	http.HandleFunc("/posts/date", post_controller.GetPostsByDateHandler)
+	http.HandleFunc("/posts/tag", post_controller.GetPostsByTagHandler)
+	http.HandleFunc("/posts/likes", post_controller.GetLikedPostByUserHandler)
+	http.HandleFunc("/posts/like/count", post_controller.GetLikeCountHandler)
+	http.HandleFunc("/post/new", post_controller.PostNewPostHandler)
+	http.HandleFunc("/post/update", post_controller.PostUpdatePostHandler)
+	http.HandleFunc("/post/delete", post_controller.PostDeletePostHandler)
+	http.HandleFunc("/post/like", post_controller.PostLikePostHandler)
+	http.HandleFunc("/post/unlike", post_controller.PostUnlikePostHandler)
+	http.HandleFunc("/post/comment", post_controller.PostCommentHandler)
+	http.HandleFunc("/post/comments", post_controller.GetCommentsHandler)
+	http.HandleFunc("/post/comment/delete", post_controller.PostDeleteCommentHandler)
+	http.HandleFunc("/post/comment/update", post_controller.PostUpdateCommentHandler)
+	http.HandleFunc("/post", post_controller.GetPostHandler)
 
 	closeDBWithSysCall()
 
