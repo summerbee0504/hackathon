@@ -23,6 +23,8 @@ func main() {
 
 	http.HandleFunc("/posts/categories", post_controller.GetPostsByCategoryHandler)
 	http.HandleFunc("/posts/curriculums", post_controller.GetPostsByCurriculumHandler)
+	http.HandleFunc("/posts/curriculums/all", post_controller.GetAllCurriculumsHandler)
+	http.HandleFunc("/posts/tags/all", post_controller.GetAllTagsHandler)
 	http.HandleFunc("/posts/user", post_controller.GetPostsByUserHandler)
 	http.HandleFunc("/posts/date", post_controller.GetPostsByDateHandler)
 	http.HandleFunc("/posts/tag", post_controller.GetPostsByTagHandler)

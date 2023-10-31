@@ -46,3 +46,13 @@ type GetComment struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
+
+type Curriculum struct {
+	Id         string `json:"id"`
+	Curriculum string `json:"curriculum"`
+}
+
+type Tag struct {
+	Id  string `json:"id"`
+	Tag string `json:"tag"`
+}

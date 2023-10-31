@@ -13,7 +13,7 @@ type User struct {
 	Email        string `json:"email"`
 	Term         int    `json:"term"`
 	Bio          string `json:"bio"`
-	PermissionId int    `json:"permission"`
+	PermissionId int    `json:"permission_id"`
 }
 
 type ShowUser struct {
@@ -40,7 +40,7 @@ type UpdateUserDetails struct {
 
 type UpdateUserPermission struct {
 	Id         string `json:"id"`
-	Permission int    `json:"permission"`
+	Permission int    `json:"permission_id"`
 }
 
 //type UserImage struct {

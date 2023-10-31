@@ -14,8 +14,13 @@ func GetLikeCount(id string) (bytes []byte, err error) {
 	return bytes, err
 }
 
-func GetLikedPosts(id string) (bytes []byte, err error) {
-	bytes, err = dao.GetLikedPosts(id)
+func GetAllCurriculums() (bytes []byte, err error) {
+	bytes, err = dao.GetAllCurriculums()
+	return bytes, err
+}
+
+func GetAllTags() (bytes []byte, err error) {
+	bytes, err = dao.GetAllTags()
 	return bytes, err
 }
 

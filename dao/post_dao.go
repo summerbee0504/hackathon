@@ -91,6 +91,52 @@ func DeletePost(id string) error {
 	return nil
 }
 
+func GetAllCurriculums() (bytes []byte, err error) {
+	rows, err := Db.Query("SELECT id, curriculum " +
+		"FROM curriculums")
+	if err != nil {
+		return nil, fmt.Errorf("fail: db.Query, %v", err)
+	}
+	defer rows.Close()
+
+	curriculums := make([]model.Curriculum, 0)
+	for rows.Next() {
+		var c model.Curriculum
+		if err := rows.Scan(&c.Id, &c.Curriculum); err != nil {
+			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
+		}
+		curriculums = append(curriculums, c)
+	}
+	bytes, err = json.Marshal(curriculums)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
+	return bytes, nil
+}
+
+func GetAllTags() (bytes []byte, err error) {
+	rows, err := Db.Query("SELECT id, tag " +
+		"FROM tags")
+	if err != nil {
+		return nil, fmt.Errorf("fail: db.Query, %v", err)
+	}
+	defer rows.Close()
+
+	tags := make([]model.Tag, 0)
+	for rows.Next() {
+		var t model.Tag
+		if err := rows.Scan(&t.Id, &t.Tag); err != nil {
+			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
+		}
+		tags = append(tags, t)
+	}
+	bytes, err = json.Marshal(tags)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
+	return bytes, nil
+}
+
 func GetAllPostsByUser(id string) (bytes []byte, err error) {
 	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.updated_at "+
 		"FROM posts p "+
