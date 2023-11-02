@@ -34,9 +34,17 @@ func PostUnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	err := post_usecase.UnlikePost(id)
+	decode := json.NewDecoder(r.Body)
+	var l model.Unlike
+	err := decode.Decode(&l)
 	if err != nil {
+		log.Printf("fail: json.Decode, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	errMsg := post_usecase.UnlikePost(l)
+	if errMsg != nil {
 		log.Printf("fail: post_usecase.UnlikePost, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -48,8 +56,16 @@ func GetLikedPostByUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	posts, err := post_usecase.GetLikedPostByUser(id)
+	decode := json.NewDecoder(r.Body)
+	var i model.SearchById
+	err := decode.Decode(&i)
+	if err != nil {
+		log.Printf("fail: json.Decode, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	posts, err := post_usecase.GetLikedPostByUser(i)
 	if err != nil {
 		log.Printf("fail: post_usecase.GetLikedPostByUser, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -70,8 +86,17 @@ func GetLikeCountHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	count, err := post_usecase.GetLikeCount(id)
+
+	decode := json.NewDecoder(r.Body)
+	var i model.SearchById
+	err := decode.Decode(&i)
+	if err != nil {
+		log.Printf("fail: json.Decode, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	count, err := post_usecase.GetLikeCount(i)
 	if err != nil {
 		log.Printf("fail: post_usecase.GetLikeCount, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)

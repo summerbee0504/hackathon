@@ -35,7 +35,6 @@ func ShowUserList() (bytes []byte, err error) {
 
 // ShowUserDetail ユーザー詳細を取得する関数
 func ShowUserDetail(id string) (bytes []byte, err error) {
-
 	rows, err := Db.Query(
 		"SELECT u.id, u.name, u.email, u.term, u.bio, p.permission "+
 			"FROM users u "+
@@ -65,10 +64,10 @@ func ShowUserDetail(id string) (bytes []byte, err error) {
 }
 
 // RegisterUser ユーザーを登録する関数
-func RegisterUser(u model.User) error {
+func RegisterUser(u model.User) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: db.Begin, %v", err)
 	}
 
 	_, err = tx.Exec("INSERT INTO users (id, name, email, term, bio, permission_id) VALUES (?, ?, ?, ?, ?, ?)",
@@ -76,47 +75,23 @@ func RegisterUser(u model.User) error {
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
-// LoginUser ユーザーをログインさせる関数
-//func LoginUser(u model.LoginUser) error {
-//	rows, err := Db.Query("SELECT id "+
-//		"FROM users "+
-//		"WHERE email = ? AND password = ?",
-//		u.Email, u.Password)
-//	if err != nil {
-//		return fmt.Errorf("fail: Db.Query, %v\n", err)
-//	}
-//	defer rows.Close()
-//
-//	var id string
-//	for rows.Next() {
-//		if err := rows.Scan(&id); err != nil {
-//			return fmt.Errorf("fail: rows.Scan, %v\n", err)
-//		}
-//	}
-//
-//	if id == "" {
-//		return fmt.Errorf("user not found with email: %s", u.Email)
-//	}
-//
-//	return nil
-//}
-
 // UpdateUser ユーザー情報を更新する関数
-func UpdateUser(u model.UpdateUserDetails) error {
+func UpdateUser(u model.UpdateUserDetails) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: db.Begin, %v", err)
 	}
 
 	_, err = tx.Exec("UPDATE users "+
@@ -125,35 +100,37 @@ func UpdateUser(u model.UpdateUserDetails) error {
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
 // DeleteUser ユーザーを削除する関数
-func DeleteUser(id string) error {
+func DeleteUser(id string) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: db.Begin, %v", err)
 	}
 
 	_, err = tx.Exec("DELETE FROM users WHERE id = ?", id)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }

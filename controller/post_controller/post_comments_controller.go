@@ -37,9 +37,14 @@ func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
-	id := r.URL.Query().Get("id")
-	bytes, err := post_usecase.GetComments(id)
+	bytes, err := post_usecase.GetComments(i)
 	if err != nil {
 		log.Printf("fail: post_usecase.GetComments, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -83,8 +88,15 @@ func PostDeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	err := post_usecase.DeleteComment(id)
+
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	err := post_usecase.DeleteComment(i)
 	if err != nil {
 		log.Printf("fail: post_usecase.DeleteComment, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)

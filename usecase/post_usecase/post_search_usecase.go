@@ -1,15 +1,21 @@
 package post_usecase
 
-import "hackathon/dao"
+import (
+	"hackathon/dao"
+	"hackathon/model"
+	"strconv"
+)
 
 // GetPost get a post
-func GetPost(id string) (bytes []byte, err error) {
+func GetPost(i model.SearchById) (bytes []byte, err error) {
+	id := i.Id
 	bytes, err = dao.GetPost(id)
 	return bytes, err
 }
 
 // GetLikeCount get like count of a post
-func GetLikeCount(id string) (bytes []byte, err error) {
+func GetLikeCount(i model.SearchById) (bytes []byte, err error) {
+	id := i.Id
 	bytes, err = dao.GetLikeCount(id)
 	return bytes, err
 }
@@ -25,25 +31,35 @@ func GetAllTags() (bytes []byte, err error) {
 }
 
 // GetAllPostsByUser get all posts by user
-func GetAllPostsByUser(id string) (bytes []byte, err error) {
+func GetAllPostsByUser(i model.SearchById) (bytes []byte, err error) {
+	id := i.Id
 	bytes, err = dao.GetAllPostsByUser(id)
 	return bytes, err
 }
 
 // GetAllPostsByTag get all posts by tag
-func GetAllPostsByTag(id string) (bytes []byte, err error) {
+func GetAllPostsByTag(i model.SearchById) (bytes []byte, err error) {
+	id := i.Id
 	bytes, err = dao.GetAllPostsByTag(id)
 	return bytes, err
 }
 
 // GetAllPostsByCategory get all posts by category
-func GetAllPostsByCategory(id int) (bytes []byte, err error) {
+func GetAllPostsByCategory(i model.SearchById) (bytes []byte, err error) {
+	id, errMsg := strconv.Atoi(i.Id)
+	if err != nil {
+		return nil, errMsg
+	}
 	bytes, err = dao.GetAllPostsByCategory(id)
 	return bytes, err
 }
 
 // GetAllPostsByCurriculum get all posts by curriculum
-func GetAllPostsByCurriculum(id int) (bytes []byte, err error) {
+func GetAllPostsByCurriculum(i model.SearchById) (bytes []byte, err error) {
+	id, errMsg := strconv.Atoi(i.Id)
+	if err != nil {
+		return nil, errMsg
+	}
 	bytes, err = dao.GetAllPostsByCurriculum(id)
 	return bytes, err
 }
