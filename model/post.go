@@ -22,11 +22,20 @@ type GetPost struct {
 	UpdatedAt  string `json:"update_at"`
 }
 
+type SearchById struct {
+	Id string `json:"id"`
+}
+
 type Like struct {
 	Id      string `json:"id"`
 	PostId  string `json:"post_id"`
 	UserId  string `json:"user_id"`
 	LikedAt string `json:"liked_at"`
+}
+
+type Unlike struct {
+	PostId string `json:"post_id"`
+	UserId string `json:"user_id"`
 }
 
 type Comment struct {

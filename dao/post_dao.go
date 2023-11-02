@@ -6,24 +6,27 @@ import (
 	"hackathon/model"
 )
 
-func MakePost(p model.Post) error {
+func MakePost(p model.Post) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("INSERT INTO posts (id, category_id, user_id, title, content, curriculum_id) "+
 		"VALUES (?, ?, ?, ?, ?, ?)",
 		p.Id, p.CategoryId, p.UserId, p.Title, p.Content, p.CurriculumId); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+
+	bytes = []byte(p.Title)
+
+	return bytes, nil
 }
 
 func GetPost(id string) (bytes []byte, err error) {
@@ -51,10 +54,10 @@ func GetPost(id string) (bytes []byte, err error) {
 	return bytes, nil
 }
 
-func UpdatePost(p model.Post) error {
+func UpdatePost(p model.Post) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("UPDATE posts "+
 		"SET category_id = ?, user_id = ?, title = ?, content = ?, curriculum_id = ? "+
@@ -62,33 +65,35 @@ func UpdatePost(p model.Post) error {
 		p.CategoryId, p.UserId, p.Title, p.Content, p.CurriculumId, p.Id); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
-func DeletePost(id string) error {
+func DeletePost(id string) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("DELETE FROM posts "+
 		"WHERE id = ?", id); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
 func GetAllCurriculums() (bytes []byte, err error) {
@@ -291,23 +296,24 @@ func LikePost(l model.Like) error {
 	return nil
 }
 
-func UnlikePost(id string) error {
+func UnlikePost(l model.Unlike) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("DELETE FROM likes "+
-		"WHERE id = ?", id); err != nil {
+		"WHERE user_id = ? AND post_id = ?", l.UserId, l.PostId); err != nil {
 		err := tx.Rollback()
 		if err != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", err)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", err)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
 func GetLikeCount(id string) (bytes []byte, err error) {
@@ -361,49 +367,51 @@ func GetLikedPosts(id string) (bytes []byte, err error) {
 	return bytes, nil
 }
 
-func CommentPost(c model.Comment) error {
+func CommentPost(c model.Comment) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("INSERT INTO comments (id, post_id, user_id, content)"+
 		"VALUES (?, ?, ?, ?)",
 		c.Id, c.PostId, c.UserId, c.Content); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
-func DeleteComment(id string) error {
+func DeleteComment(id string) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v\n", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v\n", err)
 	}
 	if _, err := tx.Exec("DELETE FROM comments "+
 		"WHERE id = ?", id); err != nil {
 		err := tx.Rollback()
 		if err != nil {
-			return fmt.Errorf("fail: db.Rollback, %v\n", err)
+			return nil, fmt.Errorf("fail: db.Rollback, %v\n", err)
 		}
-		return fmt.Errorf("fail: db.Exec, %v\n", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v\n", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v\n", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v\n", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
-func UpdateComment(c model.Comment) error {
+func UpdateComment(c model.Comment) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v\n", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v\n", err)
 	}
 	if _, err := tx.Exec("UPDATE comments "+
 		"SET content = ? "+
@@ -411,14 +419,15 @@ func UpdateComment(c model.Comment) error {
 		c.Content, c.Id); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v\n", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v\n", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v\n", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v\n", err)
 	}
-	return nil
+	bytes = []byte("success")
+	return bytes, nil
 }
 
 func GetAllCommentsByPost(id string) (bytes []byte, err error) {

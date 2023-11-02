@@ -1,10 +1,11 @@
 package post_controller
 
 import (
+	"encoding/json"
+	"hackathon/model"
 	"hackathon/usecase/post_usecase"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 func GetPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -12,8 +13,14 @@ func GetPostHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	bytes, err := post_usecase.GetPost(id)
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	bytes, err := post_usecase.GetPost(i)
 
 	if err != nil {
 		log.Printf("fail: post_usecase.GetPost, %v\n", err)
@@ -76,14 +83,14 @@ func GetPostsByCategoryHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	stringId := r.URL.Query().Get("id")
-	id, convertErr := strconv.Atoi(stringId)
-	if convertErr != nil {
-		log.Printf("fail: strconv.Atoi, %v\n", convertErr)
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
-	bytes, err := post_usecase.GetAllPostsByCategory(id)
+
+	bytes, err := post_usecase.GetAllPostsByCategory(i)
 
 	if err != nil {
 		log.Printf("fail: post_usecase.GetAllPostsByCategory, %v\n", err)
@@ -104,8 +111,13 @@ func GetPostsByUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	bytes, err := post_usecase.GetAllPostsByUser(id)
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	bytes, err := post_usecase.GetAllPostsByUser(i)
 
 	if err != nil {
 		log.Printf("fail: post_usecase.GetAllPostsByUser, %v\n", err)
@@ -126,14 +138,13 @@ func GetPostsByCurriculumHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	stringId := r.URL.Query().Get("id")
-	id, convertErr := strconv.Atoi(stringId)
-	if convertErr != nil {
-		log.Printf("fail: strconv.Atoi, %v\n", convertErr)
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
-	bytes, err := post_usecase.GetAllPostsByCurriculum(id)
+	bytes, err := post_usecase.GetAllPostsByCurriculum(i)
 
 	if err != nil {
 		log.Printf("fail: post_usecase.GetAllPostsByCurriculum, %v\n", err)
@@ -175,8 +186,13 @@ func GetPostsByTagHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id := r.URL.Query().Get("id")
-	bytes, err := post_usecase.GetAllPostsByTag(id)
+	var i model.SearchById
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&i); err != nil {
+		log.Printf("fail: json.NewDecoder, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	bytes, err := post_usecase.GetAllPostsByTag(i)
 
 	if err != nil {
 		log.Printf("fail: post_usecase.GetAllPostsByTag, %v\n", err)
