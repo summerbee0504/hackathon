@@ -2,10 +2,11 @@ FROM golang as build
 
 WORKDIR /app
 
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download && go mod tidy
 
-COPY main.go ./
+COPY . .
+
 RUN go build -o /app/main
 
 ENTRYPOINT ["/app/main"]
