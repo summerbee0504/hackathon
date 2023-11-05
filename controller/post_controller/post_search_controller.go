@@ -1,7 +1,6 @@
 package post_controller
 
 import (
-	"encoding/json"
 	"hackathon/model"
 	"hackathon/usecase/post_usecase"
 	"log"
@@ -9,16 +8,20 @@ import (
 )
 
 func GetPostHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	var i model.SearchById
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&i); err != nil {
-		log.Printf("fail: json.NewDecoder, %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	i.Id = r.URL.Query().Get("id")
 
 	bytes, err := post_usecase.GetPost(i)
 
@@ -37,10 +40,19 @@ func GetPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllCurriculumsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	bytes, err := post_usecase.GetAllCurriculums()
 
 	if err != nil {
@@ -58,10 +70,19 @@ func GetAllCurriculumsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	bytes, err := post_usecase.GetAllTags()
 
 	if err != nil {
@@ -79,16 +100,21 @@ func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsByCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	var i model.SearchById
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&i); err != nil {
-		log.Printf("fail: json.NewDecoder, %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	i.Id = r.URL.Query().Get("id")
 
 	bytes, err := post_usecase.GetAllPostsByCategory(i)
 
@@ -107,16 +133,22 @@ func GetPostsByCategoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsByUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	var i model.SearchById
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&i); err != nil {
-		log.Printf("fail: json.NewDecoder, %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	i.Id = r.URL.Query().Get("id")
+
 	bytes, err := post_usecase.GetAllPostsByUser(i)
 
 	if err != nil {
@@ -134,16 +166,22 @@ func GetPostsByUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsByCurriculumHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	var i model.SearchById
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&i); err != nil {
-		log.Printf("fail: json.NewDecoder, %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	i.Id = r.URL.Query().Get("id")
+
 	bytes, err := post_usecase.GetAllPostsByCurriculum(i)
 
 	if err != nil {
@@ -161,10 +199,18 @@ func GetPostsByCurriculumHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsByDateHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	bytes, err := post_usecase.GetAllPostsByDate()
 
 	if err != nil {
@@ -182,16 +228,20 @@ func GetPostsByDateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsByTagHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	var i model.SearchById
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&i); err != nil {
-		log.Printf("fail: json.NewDecoder, %v\n", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	i.Id = r.URL.Query().Get("id")
 	bytes, err := post_usecase.GetAllPostsByTag(i)
 
 	if err != nil {
