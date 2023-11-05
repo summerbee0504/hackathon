@@ -7,7 +7,14 @@ import (
 )
 
 func GetUserListHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	} else if r.Method != http.MethodGet {
 		log.Printf("fail: HTTP Method is %s\n", r.Method)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -30,11 +37,18 @@ func GetUserListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserDetailHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		log.Printf("fail: HTTP Method is %s\n", r.Method)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	} else if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	id := r.URL.Query().Get("id")
 	bytes, err := user_usecase.ShowUserDetail(id)
 

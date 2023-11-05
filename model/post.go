@@ -7,8 +7,8 @@ type Post struct {
 	Title        string `json:"title"`
 	Content      string `json:"content"`
 	CurriculumId int    `json:"curriculum_id"`
-	CreatedAt    string `json:"create_at"`
-	UpdatedAt    string `json:"update_at"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
 }
 
 type GetPost struct {
@@ -18,8 +18,8 @@ type GetPost struct {
 	Title      string `json:"title"`
 	Content    string `json:"content"`
 	Curriculum string `json:"curriculum"`
-	CreatedAt  string `json:"create_at"`
-	UpdatedAt  string `json:"update_at"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
 }
 
 type SearchById struct {
