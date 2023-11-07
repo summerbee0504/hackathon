@@ -2,6 +2,7 @@ package user_usecase
 
 import (
 	"hackathon/dao"
+	"hackathon/model"
 )
 
 func ShowUserList() (bytes []byte, err error) {
@@ -9,7 +10,8 @@ func ShowUserList() (bytes []byte, err error) {
 	return bytes, err
 }
 
-func ShowUserDetail(id string) (bytes []byte, err error) {
+func GetShowUserDetail(i model.SearchById) (bytes []byte, err error) {
+	id := i.Id
 	bytes, err = dao.ShowUserDetail(id)
 	return bytes, err
 }

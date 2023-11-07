@@ -20,14 +20,19 @@ func PostCommentHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("fail: json.NewDecoder, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	err := post_usecase.MakeComment(l)
+	bytes, err := post_usecase.MakeComment(l)
 	if err != nil {
 		log.Printf("fail: post_usecase.MakeComment, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 }
 
@@ -84,9 +89,15 @@ func PostUpdateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("fail: json.NewDecoder, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	err := post_usecase.UpdateComment(l)
+	bytes, err := post_usecase.UpdateComment(l)
 	if err != nil {
 		log.Printf("fail: post_usecase.UpdateComment, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -113,9 +124,15 @@ func PostDeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	err := post_usecase.DeleteComment(i)
+	bytes, err := post_usecase.DeleteComment(i)
 	if err != nil {
 		log.Printf("fail: post_usecase.DeleteComment, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

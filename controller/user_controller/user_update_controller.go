@@ -30,10 +30,16 @@ func PostUpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := user_usecase.GetUpdateUser(u)
+	bytes, err := user_usecase.GetUpdateUser(u)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	return
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

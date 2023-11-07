@@ -28,8 +28,15 @@ func PostDeletePostHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	if err := post_usecase.DeletePost(i); err != nil {
+	bytes, err := post_usecase.DeletePost(i)
+	if err != nil {
 		log.Printf("fail: post_usecase.DeletePost, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -2,24 +2,31 @@ package model
 
 type Post struct {
 	Id           string `json:"id"`
-	CategoryId   int    `json:"category_id"`
 	UserId       string `json:"user_id"`
+	CategoryId   int    `json:"category_id"`
 	Title        string `json:"title"`
+	Url          string `json:"url"`
 	Content      string `json:"content"`
-	CurriculumId int    `json:"curriculum_id"`
+	CurriculumId string `json:"curriculum_id"`
 	CreatedAt    string `json:"created_at"`
 	UpdatedAt    string `json:"updated_at"`
 }
 
 type GetPost struct {
-	Id         string `json:"id"`
-	Category   string `json:"category"`
-	User       string `json:"user"`
-	Title      string `json:"title"`
-	Content    string `json:"content"`
-	Curriculum string `json:"curriculum"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
+	Id           string `json:"id"`
+	Category     string `json:"category"`
+	User         string `json:"user"`
+	UserId       string `json:"user_id"`
+	UserImage    string `json:"user_image"`
+	Title        string `json:"title"`
+	Url          string `json:"url"`
+	Content      string `json:"content"`
+	Curriculum   string `json:"curriculum"`
+	CurriculumId string `json:"curriculum_id"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
+	CommentCount int    `json:"comment_count"`
+	LikeCount    int    `json:"like_count"`
 }
 
 type SearchById struct {
@@ -51,6 +58,7 @@ type GetComment struct {
 	Id        string `json:"id"`
 	PostId    string `json:"post_id"`
 	User      string `json:"user"`
+	UserImage string `json:"user_image"`
 	Content   string `json:"content"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
