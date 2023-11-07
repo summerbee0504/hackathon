@@ -28,10 +28,16 @@ func PostNewPostHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if err := post_usecase.MakePost(p); err != nil {
+	bytes, err := post_usecase.MakePost(p)
+	if err != nil {
 		log.Printf("fail: post_usecase.MakePost, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

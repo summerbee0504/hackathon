@@ -1,6 +1,7 @@
 package user_controller
 
 import (
+	"hackathon/model"
 	"hackathon/usecase/user_usecase"
 	"log"
 	"net/http"
@@ -49,11 +50,12 @@ func GetUserDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get("id")
-	bytes, err := user_usecase.ShowUserDetail(id)
+	var i model.SearchById
+	i.Id = r.URL.Query().Get("id")
+	bytes, err := user_usecase.GetShowUserDetail(i)
 
 	if err != nil {
-		log.Printf("fail: user_usecase.ShowUserDetail, %v\n", err)
+		log.Printf("fail: user_usecase.GetShowUserDetail, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -11,9 +11,9 @@ func MakePost(p model.Post) (bytes []byte, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
-	if _, err := tx.Exec("INSERT INTO posts (id, category_id, user_id, title, content, curriculum_id) "+
-		"VALUES (?, ?, ?, ?, ?, ?)",
-		p.Id, p.CategoryId, p.UserId, p.Title, p.Content, p.CurriculumId); err != nil {
+	if _, err := tx.Exec("INSERT INTO posts (id, user_id, category_id, title, url, content, curriculum_id) "+
+		"VALUES (?, ?, ?, ?, ?, ?, ?	)",
+		p.Id, p.UserId, p.CategoryId, p.Title, p.Url, p.Content, p.CurriculumId); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
@@ -24,13 +24,17 @@ func MakePost(p model.Post) (bytes []byte, err error) {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
 
-	bytes = []byte(p.Title)
+	response := map[string]string{"post_id": p.Id}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 
 	return bytes, nil
 }
 
 func GetPost(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
+	rows, err := Db.Query("SELECT ca.category, u.name, u.id, u.image, p.title, p.url, p.content, cu.curriculum, cu.id, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
@@ -43,10 +47,23 @@ func GetPost(id string) (bytes []byte, err error) {
 
 	post := model.GetPost{}
 	for rows.Next() {
-		if err := rows.Scan(&post.Category, &post.User, &post.Title, &post.Content, &post.Curriculum, &post.CreatedAt, &post.UpdatedAt); err != nil {
+		if err := rows.Scan(&post.Category, &post.User, &post.UserId, &post.UserImage, &post.Title, &post.Url, &post.Content, &post.Curriculum, &post.CurriculumId, &post.CreatedAt, &post.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
 	}
+
+	likes, err := GetLikeCount(id)
+	if err != nil {
+		return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+	}
+	post.LikeCount = likes
+
+	comments, err := GetCommentCount(id)
+	if err != nil {
+		return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+	}
+	post.CommentCount = comments
+
 	bytes, err = json.Marshal(post)
 	if err != nil {
 		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
@@ -60,9 +77,9 @@ func UpdatePost(p model.Post) (bytes []byte, err error) {
 		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("UPDATE posts "+
-		"SET category_id = ?, user_id = ?, title = ?, content = ?, curriculum_id = ? "+
+		"SET category_id = ?, user_id = ?, title = ?, url = ?, content = ?, curriculum_id = ? "+
 		"WHERE id = ?",
-		p.CategoryId, p.UserId, p.Title, p.Content, p.CurriculumId, p.Id); err != nil {
+		p.CategoryId, p.Title, p.Title, p.Url, p.Content, p.CurriculumId, p.Id); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
@@ -72,7 +89,11 @@ func UpdatePost(p model.Post) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"post_id": p.Id}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
@@ -92,7 +113,11 @@ func DeletePost(id string) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
@@ -144,13 +169,13 @@ func GetAllTags() (bytes []byte, err error) {
 
 func GetAllPostsByUser(id string) (bytes []byte, err error) {
 	rows, err := Db.Query(
-		"SELECT p.id, ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
+		"SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
 			"FROM posts p "+
 			"INNER JOIN categories ca ON p.category_id = ca.id "+
 			"INNER JOIN users u ON p.user_id = u.id "+
 			"INNER JOIN curriculums cu ON p.curriculum_id = cu.id "+
 			"WHERE p.user_id = ? "+
-			"ORDER BY p.updated_at", id)
+			"ORDER BY p.created_at", id)
 
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v", err)
@@ -160,11 +185,22 @@ func GetAllPostsByUser(id string) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
+		likes, err := GetLikeCount(id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+		}
+		p.LikeCount = likes
+		comments, err := GetCommentCount(id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+		}
+		p.CommentCount = comments
 		posts = append(posts, p)
 	}
+
 	bytes, err = json.Marshal(posts)
 	if err != nil {
 		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
@@ -181,7 +217,7 @@ func GetAllPostsByTag(id string) (bytes []byte, err error) {
 		"INNER JOIN post_tags pt ON p.id = pt.post_id "+
 		"INNER JOIN tag_names tn ON pt.tag_id = tn.id "+
 		"WHERE tn.id = ? "+
-		"ORDER BY p.updated_at", id)
+		"ORDER BY p.created_at DESC ", id)
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v", err)
 	}
@@ -190,9 +226,19 @@ func GetAllPostsByTag(id string) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
+		likes, err := GetLikeCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+		}
+		p.LikeCount = likes
+		comments, err := GetCommentCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+		}
+		p.CommentCount = comments
 		posts = append(posts, p)
 	}
 	bytes, err = json.Marshal(posts)
@@ -203,13 +249,13 @@ func GetAllPostsByTag(id string) (bytes []byte, err error) {
 }
 
 func GetAllPostsByCategory(id int) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
 		"INNER JOIN curriculums cu ON p.curriculum_id = cu.id "+
 		"WHERE p.category_id = ? "+
-		"ORDER BY p.updated_at", id)
+		"ORDER BY p.created_at DESC", id)
 
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v", err)
@@ -219,9 +265,19 @@ func GetAllPostsByCategory(id int) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
+		likes, err := GetLikeCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+		}
+		p.LikeCount = likes
+		comments, err := GetCommentCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+		}
+		p.CommentCount = comments
 		posts = append(posts, p)
 	}
 	bytes, err = json.Marshal(posts)
@@ -231,14 +287,14 @@ func GetAllPostsByCategory(id int) (bytes []byte, err error) {
 	return bytes, nil
 }
 
-func GetAllPostsByCurriculum(id int) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
+func GetAllPostsByCurriculum(id string) (bytes []byte, err error) {
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
 		"INNER JOIN curriculums cu ON p.curriculum_id = cu.id "+
 		"WHERE p.curriculum_id = ? "+
-		"ORDER BY p.updated_at", id)
+		"ORDER BY p.created_at DESC", id)
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v", err)
 	}
@@ -247,9 +303,19 @@ func GetAllPostsByCurriculum(id int) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
+		likes, err := GetLikeCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+		}
+		p.LikeCount = likes
+		comments, err := GetCommentCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+		}
+		p.CommentCount = comments
 		posts = append(posts, p)
 	}
 	bytes, err = json.Marshal(posts)
@@ -260,12 +326,12 @@ func GetAllPostsByCurriculum(id int) (bytes []byte, err error) {
 }
 
 func GetAllPostsByDate() (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at " +
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at " +
 		"FROM posts p " +
 		"INNER JOIN categories ca ON p.category_id = ca.id " +
 		"INNER JOIN users u ON p.user_id = u.id " +
 		"INNER JOIN curriculums cu ON p.curriculum_id = cu.id " +
-		"ORDER BY p.updated_at")
+		"ORDER BY p.created_at DESC")
 
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v", err)
@@ -275,10 +341,21 @@ func GetAllPostsByDate() (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
+		likes, err := GetLikeCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+		}
+		p.LikeCount = likes
+		comments, err := GetCommentCount(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+		}
+		p.CommentCount = comments
 		posts = append(posts, p)
+
 	}
 	bytes, err = json.Marshal(posts)
 	if err != nil {
@@ -287,24 +364,29 @@ func GetAllPostsByDate() (bytes []byte, err error) {
 	return bytes, nil
 }
 
-func LikePost(l model.Like) error {
+func LikePost(l model.Like) (bytes []byte, err error) {
 	tx, err := Db.Begin()
 	if err != nil {
-		return fmt.Errorf("fail: Db.Begin, %v", err)
+		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("INSERT INTO likes (id, post_id, user_id) "+
 		"VALUES (?, ?, ?)",
 		l.Id, l.PostId, l.UserId); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
+			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
 		}
-		return fmt.Errorf("fail: db.Exec, %v", err)
+		return nil, fmt.Errorf("fail: db.Exec, %v", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("fail: db.Commit, %v", err)
+		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	return nil
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
+	return bytes, nil
 }
 
 func UnlikePost(l model.Unlike) (bytes []byte, err error) {
@@ -323,42 +405,41 @@ func UnlikePost(l model.Unlike) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
-	return bytes, nil
-}
-
-func GetLikeCount(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT COUNT(*) "+
-		"FROM likes "+
-		"WHERE post_id = ?", id)
-	if err != nil {
-		return nil, fmt.Errorf("fail: db.Query, %v", err)
-	}
-	var count int
-	for rows.Next() {
-		if err := rows.Scan(&count); err != nil {
-			if err := rows.Close(); err != nil {
-				return nil, fmt.Errorf("fail: rows.Close(), %v", err)
-			}
-			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
-		}
-	}
-	bytes, err = json.Marshal(count)
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
 	if err != nil {
 		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
 	}
 	return bytes, nil
 }
 
+func GetLikeCount(id string) (count int, err error) {
+	rows, err := Db.Query("SELECT COUNT(*) "+
+		"FROM likes "+
+		"WHERE post_id = ?", id)
+	if err != nil {
+		return 0, fmt.Errorf("fail: db.Query, %v", err)
+	}
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			if err := rows.Close(); err != nil {
+				return 0, fmt.Errorf("fail: rows.Close(), %v", err)
+			}
+			return 0, fmt.Errorf("fail: rows.Scan, %v", err)
+		}
+	}
+	return count, nil
+}
+
 func GetLikedPosts(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
 		"INNER JOIN curriculums cu ON p.curriculum_id = cu.id "+
 		"INNER JOIN likes l ON p.id = l.post_id "+
 		"WHERE l.user_id = ? "+
-		"ORDER BY p.updated_at", id)
+		"ORDER BY l.liked_at DESC", id)
 
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v", err)
@@ -366,12 +447,22 @@ func GetLikedPosts(id string) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			if err := rows.Close(); err != nil {
 				return nil, fmt.Errorf("fail: rows.Close(), %v", err)
 			}
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
+		likes, err := GetLikeCount(id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetLikeCount, %v", err)
+		}
+		p.LikeCount = likes
+		comments, err := GetCommentCount(id)
+		if err != nil {
+			return nil, fmt.Errorf("fail: GetCommentCount, %v", err)
+		}
+		p.CommentCount = comments
 		posts = append(posts, p)
 	}
 	bytes, err = json.Marshal(posts)
@@ -398,7 +489,10 @@ func CommentPost(c model.Comment) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
+	bytes, err = json.Marshal("success")
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
@@ -418,7 +512,11 @@ func DeleteComment(id string) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v\n", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
@@ -440,23 +538,27 @@ func UpdateComment(c model.Comment) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v\n", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
 func GetAllCommentsByPost(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT c.id, u.name, c.content, c.updated_at "+
+	rows, err := Db.Query("SELECT c.id, u.name, u.image, c.content, c.created_at "+
 		"FROM comments c "+
 		"INNER JOIN users u ON c.user_id = u.id "+
 		"WHERE c.post_id = ? "+
-		"ORDER BY c.updated_at", id)
+		"ORDER BY c.created_at", id)
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v\n", err)
 	}
 	comments := make([]model.GetComment, 0)
 	for rows.Next() {
 		var c model.GetComment
-		if err := rows.Scan(&c.Id, &c.User, &c.Content, &c.UpdatedAt); err != nil {
+		if err := rows.Scan(&c.Id, &c.User, &c.UserImage, &c.Content, &c.CreatedAt); err != nil {
 			if err := rows.Close(); err != nil {
 				return nil, fmt.Errorf("fail: rows.Close(), %v\n", err)
 			}
@@ -469,4 +571,22 @@ func GetAllCommentsByPost(id string) (bytes []byte, err error) {
 		return nil, fmt.Errorf("fail: json.Marshal, %v\n", err)
 	}
 	return bytes, nil
+}
+
+func GetCommentCount(id string) (count int, err error) {
+	rows, err := Db.Query("SELECT COUNT(*) "+
+		"FROM comments "+
+		"WHERE post_id = ?", id)
+	if err != nil {
+		return 0, fmt.Errorf("fail: db.Query, %v", err)
+	}
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			if err := rows.Close(); err != nil {
+				return 0, fmt.Errorf("fail: rows.Close(), %v", err)
+			}
+			return 0, fmt.Errorf("fail: rows.Scan, %v", err)
+		}
+	}
+	return count, nil
 }

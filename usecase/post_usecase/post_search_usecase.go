@@ -13,10 +13,9 @@ func GetPost(i model.SearchById) (bytes []byte, err error) {
 	return bytes, err
 }
 
-// GetLikeCount get like count of a post
-func GetLikeCount(i model.SearchById) (bytes []byte, err error) {
+func GetLikedPosts(i model.SearchById) (bytes []byte, err error) {
 	id := i.Id
-	bytes, err = dao.GetLikeCount(id)
+	bytes, err = dao.GetLikedPosts(id)
 	return bytes, err
 }
 
@@ -56,10 +55,7 @@ func GetAllPostsByCategory(i model.SearchById) (bytes []byte, err error) {
 
 // GetAllPostsByCurriculum get all posts by curriculum
 func GetAllPostsByCurriculum(i model.SearchById) (bytes []byte, err error) {
-	id, errMsg := strconv.Atoi(i.Id)
-	if err != nil {
-		return nil, errMsg
-	}
+	id := i.Id
 	bytes, err = dao.GetAllPostsByCurriculum(id)
 	return bytes, err
 }

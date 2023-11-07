@@ -27,10 +27,18 @@ func PostNewUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err := decoder.Decode(&u); err != nil {
 		log.Printf("fail: json.NewDecoder, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	if err := user_usecase.GetRegisterUser(u); err != nil {
+	bytes, err := user_usecase.GetRegisterUser(u)
+	if err != nil {
 		log.Printf("fail: GetRegisterUser, %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(bytes); err != nil {
+		log.Printf("fail: w.Write, %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

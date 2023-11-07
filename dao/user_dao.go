@@ -35,11 +35,10 @@ func ShowUserList() (bytes []byte, err error) {
 
 // ShowUserDetail ユーザー詳細を取得する関数
 func ShowUserDetail(id string) (bytes []byte, err error) {
-	rows, err := Db.Query(
-		"SELECT u.id, u.name, u.email, u.term, u.bio, p.permission "+
-			"FROM users u "+
-			"INNER JOIN permissions p ON u.permission_id = p.id "+
-			"WHERE u.id = ?;", id)
+	rows, err := Db.Query("SELECT u.id, u.name, u.term, u.bio, p.permission "+
+		"FROM users u "+
+		"INNER JOIN permissions p ON u.permission_id = p.id "+
+		"WHERE u.id = ?;", id)
 	if err != nil {
 		return nil, fmt.Errorf("fail: Db.Query, %v\n", err)
 	}
@@ -47,12 +46,10 @@ func ShowUserDetail(id string) (bytes []byte, err error) {
 
 	var u model.ShowUser
 
-	if rows.Next() {
-		if err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Term, &u.Bio, &u.Permission); err != nil {
+	for rows.Next() {
+		if err := rows.Scan(&u.Id, &u.Name, &u.Term, &u.Bio, &u.Permission); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v\n", err)
 		}
-	} else {
-		return nil, fmt.Errorf("user not found with id: %s", id)
 	}
 
 	bytes, err = json.Marshal(u)
@@ -70,8 +67,8 @@ func RegisterUser(u model.User) (bytes []byte, err error) {
 		return nil, fmt.Errorf("fail: db.Begin, %v", err)
 	}
 
-	_, err = tx.Exec("INSERT INTO users (id, name, email, term, bio, permission_id) VALUES (?, ?, ?, ?, ?, ?)",
-		u.Id, u.Name, u.Email, u.Term, u.Bio, u.PermissionId)
+	_, err = tx.Exec("INSERT INTO users (id, name, term, bio, image, permission_id) VALUES (?, ?, ?, ?, ?, ?)",
+		u.Id, u.Name, u.Term, u.Bio, u.Image, u.PermissionId)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
@@ -83,7 +80,11 @@ func RegisterUser(u model.User) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
@@ -95,8 +96,8 @@ func UpdateUser(u model.UpdateUserDetails) (bytes []byte, err error) {
 	}
 
 	_, err = tx.Exec("UPDATE users "+
-		"SET name = ?, email = ?, term = ?, bio = ? "+
-		"WHERE id = ?", u.Name, u.Email, u.Term, u.Bio, u.Id)
+		"SET name = ?, term = ?, bio = ? "+
+		"WHERE id = ?", u.Name, u.Term, u.Bio, u.Id)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
@@ -108,7 +109,11 @@ func UpdateUser(u model.UpdateUserDetails) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }
 
@@ -131,6 +136,10 @@ func DeleteUser(id string) (bytes []byte, err error) {
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("fail: db.Commit, %v", err)
 	}
-	bytes = []byte("success")
+	response := map[string]string{"message": "success"}
+	bytes, err = json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("fail: json.Marshal, %v", err)
+	}
 	return bytes, nil
 }

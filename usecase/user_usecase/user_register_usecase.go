@@ -3,15 +3,10 @@ package user_usecase
 import (
 	"hackathon/dao"
 	"hackathon/model"
-	"log"
 )
 
-func GetRegisterUser(u model.User) error {
+func GetRegisterUser(u model.User) (bytes []byte, err error) {
 
-	bytes, err := dao.RegisterUser(u)
-	if err != nil {
-		return err
-	}
-	log.Printf("%v\n", bytes)
-	return nil
+	bytes, err = dao.RegisterUser(u)
+	return bytes, err
 }
