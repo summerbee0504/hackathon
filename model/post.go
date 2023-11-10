@@ -58,6 +58,7 @@ type GetComment struct {
 	Id        string `json:"id"`
 	PostId    string `json:"post_id"`
 	User      string `json:"user"`
+	UserId    string `json:"user_id"`
 	UserImage string `json:"user_image"`
 	Content   string `json:"content"`
 	CreatedAt string `json:"created_at"`

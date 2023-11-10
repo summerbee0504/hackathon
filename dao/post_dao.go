@@ -77,9 +77,9 @@ func UpdatePost(p model.Post) (bytes []byte, err error) {
 		return nil, fmt.Errorf("fail: Db.Begin, %v", err)
 	}
 	if _, err := tx.Exec("UPDATE posts "+
-		"SET category_id = ?, user_id = ?, title = ?, url = ?, content = ?, curriculum_id = ? "+
+		"SET title = ?, url = ?, content = ?, curriculum_id = ? "+
 		"WHERE id = ?",
-		p.CategoryId, p.Title, p.Title, p.Url, p.Content, p.CurriculumId, p.Id); err != nil {
+		p.Title, p.Url, p.Content, p.CurriculumId, p.Id); err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, fmt.Errorf("fail: db.Rollback, %v", rollbackErr)
@@ -209,7 +209,7 @@ func GetAllPostsByUser(id string) (bytes []byte, err error) {
 }
 
 func GetAllPostsByTag(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, u.id, p.title, p.content, cu.curriculum, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
@@ -226,7 +226,7 @@ func GetAllPostsByTag(id string) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.UserId, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
 		likes, err := GetLikeCount(p.Id)
@@ -249,7 +249,7 @@ func GetAllPostsByTag(id string) (bytes []byte, err error) {
 }
 
 func GetAllPostsByCategory(id int) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, u.id, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
@@ -265,7 +265,7 @@ func GetAllPostsByCategory(id int) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.UserId, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
 		likes, err := GetLikeCount(p.Id)
@@ -288,7 +288,7 @@ func GetAllPostsByCategory(id int) (bytes []byte, err error) {
 }
 
 func GetAllPostsByCurriculum(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, u.id, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at "+
 		"FROM posts p "+
 		"INNER JOIN categories ca ON p.category_id = ca.id "+
 		"INNER JOIN users u ON p.user_id = u.id "+
@@ -303,7 +303,7 @@ func GetAllPostsByCurriculum(id string) (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.UserId, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
 		likes, err := GetLikeCount(p.Id)
@@ -326,7 +326,7 @@ func GetAllPostsByCurriculum(id string) (bytes []byte, err error) {
 }
 
 func GetAllPostsByDate() (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT p.id, ca.category, u.name, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at " +
+	rows, err := Db.Query("SELECT p.id, ca.category, u.name, u.id, p.title, p.url, p.content, cu.curriculum, p.created_at, p.updated_at " +
 		"FROM posts p " +
 		"INNER JOIN categories ca ON p.category_id = ca.id " +
 		"INNER JOIN users u ON p.user_id = u.id " +
@@ -341,7 +341,7 @@ func GetAllPostsByDate() (bytes []byte, err error) {
 	posts := make([]model.GetPost, 0)
 	for rows.Next() {
 		var p model.GetPost
-		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.Id, &p.Category, &p.User, &p.UserId, &p.Title, &p.Url, &p.Content, &p.Curriculum, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("fail: rows.Scan, %v", err)
 		}
 		likes, err := GetLikeCount(p.Id)
@@ -547,18 +547,18 @@ func UpdateComment(c model.Comment) (bytes []byte, err error) {
 }
 
 func GetAllCommentsByPost(id string) (bytes []byte, err error) {
-	rows, err := Db.Query("SELECT c.id, u.name, u.image, c.content, c.created_at "+
+	rows, err := Db.Query("SELECT c.id, u.name, u.id, u.image, c.content, c.created_at "+
 		"FROM comments c "+
 		"INNER JOIN users u ON c.user_id = u.id "+
 		"WHERE c.post_id = ? "+
-		"ORDER BY c.created_at", id)
+		"ORDER BY c.created_at;", id)
 	if err != nil {
 		return nil, fmt.Errorf("fail: db.Query, %v\n", err)
 	}
 	comments := make([]model.GetComment, 0)
 	for rows.Next() {
 		var c model.GetComment
-		if err := rows.Scan(&c.Id, &c.User, &c.UserImage, &c.Content, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.Id, &c.User, &c.UserId, &c.UserImage, &c.Content, &c.CreatedAt); err != nil {
 			if err := rows.Close(); err != nil {
 				return nil, fmt.Errorf("fail: rows.Close(), %v\n", err)
 			}

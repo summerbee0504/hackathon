@@ -9,11 +9,19 @@ import (
 )
 
 func PostCommentHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	} else if r.Method != http.MethodPost {
 		log.Printf("fail: HTTP Method is %s\n", r.Method)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	var l model.Comment
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&l); err != nil {
@@ -66,7 +74,6 @@ func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 
 }
 
@@ -101,7 +108,6 @@ func PostUpdateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func PostDeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -136,6 +142,4 @@ func PostDeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-
 }
