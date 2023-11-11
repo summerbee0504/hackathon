@@ -5,7 +5,7 @@
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://35.222.1.44:3306/hackathon</jdbc-url>
+      <jdbc-url>jdbc:mysql://35.222.1.44:3306/hackathon_local</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
     <data-source source="LOCAL" name="test_database@localhost" uuid="d447f33a-aff2-4630-84a4-8c9bb8918747">
