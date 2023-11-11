@@ -7,6 +7,9 @@ RUN go mod download && go mod tidy
 
 COPY . .
 
+ENV GOARCH=amd64
+ENV GOOS=linux
+
 RUN go build -o /app/main
 
 ENTRYPOINT ["/app/main"]
